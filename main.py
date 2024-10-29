@@ -14,6 +14,11 @@ def find_file_by_hash(repo_path, target_hash):
                 return file_path
     return None
 
+def get_commit_history(repo_path, file_path):
+    cmd = ["git", "-C", repo_path, "log", "--all", "--pretty=format:%H %s", "--", file_path]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+    return result.stdout.strip().splitlines()
+
 def main():
     parser = argparse.ArgumentParser(description="Commit Dependency Graph Visualizer")
     parser.add_argument('--viz', required=True, help='Path to the graph visualization program (Mermaid CLI)')
