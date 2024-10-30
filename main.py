@@ -33,6 +33,10 @@ def build_mermaid_graph(commits):
             previous_commit = commit_hash
     return mermaid_graph
 
+def save_mermaid_file(mermaid_graph, output_path):
+    with open(output_path, 'w', encoding="utf-8") as f:
+        f.write(mermaid_graph)
+
 def main():
     parser = argparse.ArgumentParser(description="Commit Dependency Graph Visualizer")
     parser.add_argument('--viz', required=True, help='Path to the graph visualization program (Mermaid CLI)')
@@ -60,6 +64,10 @@ def main():
     if not commits:
         print("No commits found for the specified file.")
         return
+
+    mermaid_graph = build_mermaid_graph(commits)
+    mermaid_file = "graph.mmd"
+    save_mermaid_file(mermaid_graph, mermaid_file)
 
 if __name__ == "__main__":
     main()
