@@ -50,5 +50,22 @@ class TestGetCommitHistory(unittest.TestCase):
         commits = get_commit_history('/repo', 'file.txt')
         self.assertEqual(commits, ['hash1 commit message with special chars á'])
 
+class TestBuildMermaidGraph(unittest.TestCase):
+    def test_single_commit(self):
+        commits = ['hash1 Initial commit']
+        graph = build_mermaid_graph(commits)
+        expected_graph = 'graph TD\n    hash1["Initial commit"]\n'
+        self.assertEqual(graph, expected_graph)
+
+    def test_multiple_commits(self):
+        generated_graph = 'graph TD\n    hash1["First commit"]\n    hash1 --> hash2\n    hash2["Second commit"]\n'
+        expected_graph = 'graph TD\n    hash1["First commit"]\n    hash2["Second commit"]\n    hash1 --> hash2\n'
+
+        self.assertEqual(set(generated_graph.splitlines()), set(expected_graph.splitlines()))
+
+    def test_no_commits(self):
+        graph = build_mermaid_graph([])
+        self.assertEqual(graph, 'graph TD\n')
+
 if __name__ == '__main__':
     unittest.main()
