@@ -67,5 +67,35 @@ class TestBuildMermaidGraph(unittest.TestCase):
         graph = build_mermaid_graph([])
         self.assertEqual(graph, 'graph TD\n')
 
+class TestSaveMermaidFile(unittest.TestCase):
+    @patch('builtins.open', new_callable=mock_open)
+    def test_save_file_content(self, mock_open_func):
+        graph = 'graph TD\n    hash1["Initial commit"]\n'
+        save_mermaid_file(graph, 'test.mmd')
+        mock_open_func.assert_called_once_with('test.mmd', 'w', encoding="utf-8")
+        mock_open_func().write.assert_called_once_with(graph)
+
+    @patch('builtins.open', new_callable=mock_open)
+    def test_empty_graph(self, mock_open_func):
+        graph = ''
+        save_mermaid_file(graph, 'test_empty.mmd')
+        mock_open_func.assert_called_once_with('test_empty.mmd', 'w', encoding="utf-8")
+        mock_open_func().write.assert_called_once_with(graph)
+
+class TestGeneratePngFromMermaid(unittest.TestCase):
+    @patch('subprocess.run')
+    def test_successful_png_creation(self, mock_run):
+        mock_run.return_value.returncode = 0
+        generate_png_from_mermaid('test.mmd', 'output.png', 'mermaid-cli')
+        mock_run.assert_called_once_with(['mermaid-cli', '-i', 'test.mmd', '-o', 'output.png'])
+
+    @patch('subprocess.run', side_effect=Exception("PNG creation failed"))
+    def test_png_creation_failure(self, mock_run):
+        mermaid_tool_path = "/path/to/mermaid"
+        with self.assertRaises(Exception) as context:
+            generate_png_from_mermaid("test.mmd", "output.png", mermaid_tool_path)
+
+        self.assertIn("PNG creation failed", str(context.exception))
+
 if __name__ == '__main__':
     unittest.main()
