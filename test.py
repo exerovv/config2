@@ -31,5 +31,24 @@ class TestFindFileByHash(unittest.TestCase):
         result = find_file_by_hash('/repo', 'targethash')
         self.assertEqual(result, os.path.join('/repo', 'file2.txt'))
 
+class TestGetCommitHistory(unittest.TestCase):
+    @patch('subprocess.run')
+    def test_commit_history_retrieved(self, mock_run):
+        mock_run.return_value.stdout = 'hash1 commit message 1\nhash2 commit message 2\n'
+        commits = get_commit_history('/repo', 'file.txt')
+        self.assertEqual(commits, ['hash1 commit message 1', 'hash2 commit message 2'])
+
+    @patch('subprocess.run')
+    def test_no_commits_found(self, mock_run):
+        mock_run.return_value.stdout = ''
+        commits = get_commit_history('/repo', 'file.txt')
+        self.assertEqual(commits, [])
+
+    @patch('subprocess.run')
+    def test_encoding_issue_handling(self, mock_run):
+        mock_run.return_value.stdout = 'hash1 commit message with special chars á\n'
+        commits = get_commit_history('/repo', 'file.txt')
+        self.assertEqual(commits, ['hash1 commit message with special chars á'])
+
 if __name__ == '__main__':
     unittest.main()
