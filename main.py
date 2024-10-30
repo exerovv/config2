@@ -37,6 +37,14 @@ def save_mermaid_file(mermaid_graph, output_path):
     with open(output_path, 'w', encoding="utf-8") as f:
         f.write(mermaid_graph)
 
+def generate_png_from_mermaid(mermaid_path, output_image_path, mermaid_tool_path):
+    cmd = [mermaid_tool_path, "-i", mermaid_path, "-o", output_image_path]
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        print("Ошибка при создании PNG из Mermaid файла.")
+    else:
+        print("Graph visualization created successfully.")
+
 def main():
     parser = argparse.ArgumentParser(description="Commit Dependency Graph Visualizer")
     parser.add_argument('--viz', required=True, help='Path to the graph visualization program (Mermaid CLI)')
@@ -68,6 +76,11 @@ def main():
     mermaid_graph = build_mermaid_graph(commits)
     mermaid_file = "graph.mmd"
     save_mermaid_file(mermaid_graph, mermaid_file)
+
+    output_image_path = f"{args.output}.png"
+    generate_png_from_mermaid(mermaid_file, output_image_path, args.viz)
+
+    #os.remove(mermaid_file)
 
 if __name__ == "__main__":
     main()
