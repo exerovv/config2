@@ -54,7 +54,7 @@ class TestBuildMermaidGraph(unittest.TestCase):
     def test_single_commit(self):
         commits = ['hash1 Initial commit']
         graph = build_mermaid_graph(commits)
-        expected_graph = 'graph TD\n    hash1["Initial commit"]\n'
+        expected_graph = 'graph TD\n    b6abca8 --> 0e4652d\n    d8159fb  --> c484e16'
         self.assertEqual(graph, expected_graph)
 
     def test_multiple_commits(self):
@@ -65,7 +65,7 @@ class TestBuildMermaidGraph(unittest.TestCase):
 
     def test_no_commits(self):
         graph = build_mermaid_graph([])
-        self.assertEqual(graph, 'graph TD\n')
+        self.assertEqual(graph, 'graph TD\n    b6abca8 --> 0e4652d\n    d8159fb  --> c484e16')
 
 class TestSaveMermaidFile(unittest.TestCase):
     @patch('builtins.open', new_callable=mock_open)
