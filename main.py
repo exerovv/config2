@@ -15,63 +15,31 @@ def find_file_by_hash(repo_path, target_hash):
     return None
 
 def get_commit_history(repo_path, file_path):
-    cmd = ["git", "-C", repo_path, "log", "--graph", "--oneline", "--all", "--", file_path]
+    cmd = ["git", "-C", repo_path, "log", "--pretty=format:%H %s %P", "--", file_path]
     result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, encoding="utf-8")
-    return result.stdout.strip().splitlines()
+
+    commit_data = []
+    for line in result.stdout.strip().split("\n"):
+        message = []
+        parents = []
+        parts = line.split()
+        commit = parts[0]
+        for item in parts[1:]:
+            if len(item) == 40 and all(c in '0123456789abcdef' for c in item):
+                parents.append(item)
+            else:
+                message.append(item)
+        commit_data.append((commit, parents, message))
+
+    return commit_data
 
 def build_mermaid_graph(commits):
-    graph_lines = ["graph TD"]
-    commit_messages = {}
-    commit_links = []
-
-    last_main_commit = None
-    last_feature_commit = None
-
-    for line in commits:
-        parts = line.split()
-
-        if not parts:
-            continue
-
-        if parts[0] == "*":
-            if parts[1] == "|":
-                commit_hash = parts[2]
-                commit_message = " ".join(parts[3:])
-                commit_messages[commit_hash] = commit_message
-            else:
-                commit_hash = parts[1]
-                commit_message = " ".join(parts[2:])
-                commit_messages[commit_hash] = commit_message
-
-            if last_main_commit:
-                commit_links.append((commit_hash, last_main_commit))
-            last_main_commit = commit_hash
-
-        elif parts[0] == "|" and parts[1] == "*":
-            commit_hash = parts[2]
-            commit_message = " ".join(parts[3:])
-            commit_messages[commit_hash] = commit_message
-
-            if last_feature_commit:
-                commit_links.append((commit_hash, last_feature_commit))
-            last_feature_commit = commit_hash
-
-        elif parts[0] == "|\\":
-            if last_feature_commit and last_main_commit:
-                commit_links.append((last_feature_commit, last_main_commit))
-
-        elif parts[0] == "|/":
-            last_feature_commit = None
-
-    for commit_hash, commit_message in commit_messages.items():
-        graph_lines.append(f'    {commit_hash}["{commit_message}"]')
-
-    for child, parent in commit_links:
-        graph_lines.append(f'    {parent} --> {child}')
-    graph_lines.append(f'    {"b6abca8"} --> {"0e4652d"}')
-    graph_lines.append(f'    {"d8159fb "} --> {"c484e16"}')
-
-    mermaid_graph = "\n".join(graph_lines)
+    mermaid_graph = "graph TD\n"
+    for commit in commits:
+        mermaid_graph += f'    {commit[0]}["{' '.join(commit[2])}"]\n'
+    for commit in commits:
+        for par in commit[1]:
+            mermaid_graph += f'    {commit[0]} --> {par}\n'
     return mermaid_graph
 
 def save_mermaid_file(mermaid_graph, output_path):

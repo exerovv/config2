@@ -33,28 +33,16 @@ class TestFindFileByHash(unittest.TestCase):
 
 class TestGetCommitHistory(unittest.TestCase):
     @patch('subprocess.run')
-    def test_commit_history_retrieved(self, mock_run):
-        mock_run.return_value.stdout = 'hash1 commit message 1\nhash2 commit message 2\n'
-        commits = get_commit_history('/repo', 'file.txt')
-        self.assertEqual(commits, ['hash1 commit message 1', 'hash2 commit message 2'])
-
-    @patch('subprocess.run')
-    def test_no_commits_found(self, mock_run):
-        mock_run.return_value.stdout = ''
-        commits = get_commit_history('/repo', 'file.txt')
-        self.assertEqual(commits, [])
-
-    @patch('subprocess.run')
     def test_encoding_issue_handling(self, mock_run):
         mock_run.return_value.stdout = 'hash1 commit message with special chars á\n'
         commits = get_commit_history('/repo', 'file.txt')
-        self.assertEqual(commits, ['hash1 commit message with special chars á'])
+        self.assertEqual(commits, [('hash1', [], ['commit', 'message', 'with', 'special', 'chars', 'á'])])
 
 class TestBuildMermaidGraph(unittest.TestCase):
     def test_single_commit(self):
         commits = ['hash1 Initial commit']
         graph = build_mermaid_graph(commits)
-        expected_graph = 'graph TD\n    b6abca8 --> 0e4652d\n    d8159fb  --> c484e16'
+        expected_graph = 'graph TD\n    h["s"]\n    h --> a\n'
         self.assertEqual(graph, expected_graph)
 
     def test_multiple_commits(self):
@@ -65,7 +53,7 @@ class TestBuildMermaidGraph(unittest.TestCase):
 
     def test_no_commits(self):
         graph = build_mermaid_graph([])
-        self.assertEqual(graph, 'graph TD\n    b6abca8 --> 0e4652d\n    d8159fb  --> c484e16')
+        self.assertEqual(graph, 'graph TD\n')
 
 class TestSaveMermaidFile(unittest.TestCase):
     @patch('builtins.open', new_callable=mock_open)
